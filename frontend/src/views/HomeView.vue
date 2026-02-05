@@ -135,6 +135,15 @@ const handleGenerate = async () => {
     const status = error?.response?.status
     const detail = error?.response?.data?.detail
 
+    const detailText = (() => {
+      if (typeof detail === 'string') return detail
+      if (Array.isArray(detail) && detail.length > 0) {
+        const first = detail[0]
+        if (first?.msg) return String(first.msg)
+      }
+      return undefined
+    })()
+
     if (!status) {
       message.error(
         API_BASE_URL
@@ -148,7 +157,7 @@ const handleGenerate = async () => {
           : 'Backend not configured (404 on /api). Set VITE_API_BASE_URL in Vercel and redeploy.'
       )
     } else {
-      message.error((typeof detail === 'string' && detail) || `Voice conversion failed (HTTP ${status})`)
+      message.error(detailText || `Voice conversion failed (HTTP ${status})`)
     }
   } finally {
     voiceStore.isConverting = false

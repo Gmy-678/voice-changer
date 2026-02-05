@@ -28,11 +28,9 @@ export async function convertVoice(
   formData.append('file', file)
   formData.append('payload', JSON.stringify(payload))
   
-  const response = await api.post<ApiResponse>('/voice-changer', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  })
+  // IMPORTANT: Do not manually set Content-Type for multipart.
+  // The browser must include the boundary; otherwise FastAPI may return 422.
+  const response = await api.post<ApiResponse>('/voice-changer', formData)
   
   return response.data
 }

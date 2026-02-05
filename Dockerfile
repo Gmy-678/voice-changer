@@ -35,5 +35,5 @@ RUN mkdir -p /app/runs /app/tmp
 # 暴露端口
 EXPOSE 8000
 
-# 启动命令
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "app.main:app"]
+# 启动命令（Render 会通过环境变量 PORT 指定监听端口）
+CMD ["sh", "-c", "gunicorn -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} app.main:app"]

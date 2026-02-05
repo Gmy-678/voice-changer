@@ -81,7 +81,7 @@ import { ref } from 'vue'
 import { RedoOutlined, BulbOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useVoiceStore } from '@/stores/voice'
-import { API_BASE_URL, convertVoice } from '@/api'
+import { API_BASE_URL, convertVoice, getOutputUrl } from '@/api'
 import AudioUpload from '@/components/AudioUpload.vue'
 import AudioRecord from '@/components/AudioRecord.vue'
 import VoiceSelector from '@/components/VoiceSelector.vue'
@@ -125,7 +125,7 @@ const handleGenerate = async () => {
     voiceStore.setConversionResult({
       taskId: response.task_id,
       status: response.status,
-      outputUrl: response.output_url,
+      outputUrl: getOutputUrl(response.output_url),
       voiceName: voiceStore.selectedVoice.name
     })
     

@@ -1,0 +1,27 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: root
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: 22
+        
+        script: |
+          cd /home/voice-changer
+          git pull origin main
+          docker-compose build
+          docker-compose up -d
+          echo "✅ 部署完成"

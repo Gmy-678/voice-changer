@@ -1,0 +1,89 @@
+/* Global styles */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: #1a1a2e;
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+}
+
+/* Ant Design overrides for light theme */
+.ant-btn-primary {
+  background: linear-gradient(135deg, #fe655d 0%, #ff8a84 100%);
+  border: none;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #ff8a84 0%, #fe655d 100%);
+}
+
+.ant-input {
+  background: #ffffff;
+  border-color: #e8e8ed;
+  color: #1a1a2e;
+}
+
+.ant-input:hover,
+.ant-input:focus {
+  border-color: #fe655d;
+}
+
+.ant-select-selector {
+  background: #ffffff !important;
+  border-color: #e8e8ed !important;
+}
+
+.ant-slider-track {
+  background: linear-gradient(90deg, #fe655d 0%, #ff8a84 100%) !important;
+}
+
+.ant-slider-handle::after {
+  background: #fe655d !important;
+  box-shadow: 0 0 0 2px #fe655d !important;
+}
+
+.ant-slider-rail {
+  background: #e8e8ed !important;
+}
+
+.ant-message-notice-content {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f5f7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5c5d0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0a0b0;
+}
+

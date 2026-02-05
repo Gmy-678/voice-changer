@@ -1,15 +1,3 @@
-# 构建阶段 - 编译前端
-FROM node:18-alpine AS frontend-builder
-
-WORKDIR /app/frontend
-
-COPY frontend/package*.json ./
-RUN npm install
-
-COPY frontend/ .
-RUN npm run build
-
-# 最终阶段 - Python 后端 + 静态文件服务
 FROM python:3.11-slim
 
 # 安装系统依赖（ffmpeg 用于音频处理）
@@ -26,9 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 # 复制后端代码
 COPY app/ ./app/
 
-# 复制前端构建的静态文件
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
-
 # 创建数据目录
 RUN mkdir -p /app/runs /app/tmp
 
@@ -36,4 +21,4 @@ RUN mkdir -p /app/runs /app/tmp
 EXPOSE 8000
 
 # 启动命令（Render 会通过环境变量 PORT 指定监听端口）
-CMD ["sh", "-c", "gunicorn -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} app.main:app"]
+CMD ["sh", "-c", "gunicorn -w 2 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} app.main:app"]

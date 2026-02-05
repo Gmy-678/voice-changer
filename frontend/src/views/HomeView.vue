@@ -81,7 +81,7 @@ import { ref } from 'vue'
 import { RedoOutlined, BulbOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useVoiceStore } from '@/stores/voice'
-import { convertVoice } from '@/api'
+import { API_BASE_URL, convertVoice } from '@/api'
 import AudioUpload from '@/components/AudioUpload.vue'
 import AudioRecord from '@/components/AudioRecord.vue'
 import VoiceSelector from '@/components/VoiceSelector.vue'
@@ -132,7 +132,24 @@ const handleGenerate = async () => {
     message.success('Voice conversion completed!')
   } catch (error: any) {
     console.error('Conversion failed:', error)
-    message.error(error.response?.data?.detail || 'Voice conversion failed')
+    const status = error?.response?.status
+    const detail = error?.response?.data?.detail
+
+    if (!status) {
+      message.error(
+        API_BASE_URL
+          ? `Network error: cannot reach API (${API_BASE_URL}). Check Render service is live and CORS allows this Vercel domain.`
+          : 'Backend not configured: set VITE_API_BASE_URL in Vercel to your Render URL, then redeploy.'
+      )
+    } else if (status === 404) {
+      message.error(
+        API_BASE_URL
+          ? `API not found on server (${API_BASE_URL}). Check Render is serving the backend.`
+          : 'Backend not configured (404 on /api). Set VITE_API_BASE_URL in Vercel and redeploy.'
+      )
+    } else {
+      message.error((typeof detail === 'string' && detail) || `Voice conversion failed (HTTP ${status})`)
+    }
   } finally {
     voiceStore.isConverting = false
   }

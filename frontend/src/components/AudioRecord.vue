@@ -1,10 +1,11 @@
 <template>
-  <div class="record-card">
+  <div class="record-card" :class="variant">
     <div class="record-icon" :class="{ recording: isRecording }">
       <AudioOutlined />
     </div>
-    <h3 class="record-title">Record Audio</h3>
-    <p class="record-desc">Use your microphone</p>
+    <h3 class="record-title" v-if="variant !== 'panel'">Record Audio</h3>
+    <p class="record-desc" v-if="variant !== 'panel'">Use your microphone</p>
+    <p class="record-desc panel-hint" v-else>Record audio</p>
     <a-button 
       :type="isRecording ? 'primary' : 'default'"
       :danger="isRecording"
@@ -26,6 +27,15 @@ import { ref, onUnmounted } from 'vue'
 import { AudioOutlined, PauseCircleOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useVoiceStore } from '@/stores/voice'
+
+withDefaults(
+  defineProps<{
+    variant?: 'card' | 'panel'
+  }>(),
+  {
+    variant: 'card'
+  }
+)
 
 const voiceStore = useVoiceStore()
 const isRecording = ref(false)
@@ -134,6 +144,26 @@ onUnmounted(() => {
   border-color: #c5c5d0;
 }
 
+.record-card.panel {
+  width: 100%;
+  flex: 1;
+  padding: 20px;
+  border-radius: 24px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #ebebeb;
+  background: #ffffff;
+  box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.record-card.panel:hover {
+  border-color: rgba(54, 53, 58, 0.16);
+}
+
 .record-icon {
   width: 64px;
   height: 64px;
@@ -146,6 +176,16 @@ onUnmounted(() => {
   font-size: 28px;
   color: #9d9db5;
   transition: all 0.3s ease;
+}
+
+.record-card.panel .record-icon {
+  width: 62px;
+  height: 62px;
+  margin-bottom: 16px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e1e1e1;
+  color: #36353a;
 }
 
 .record-icon.recording {
@@ -176,6 +216,14 @@ onUnmounted(() => {
   font-size: 14px;
   color: #9d9db5;
   margin-bottom: 20px;
+}
+
+.panel-hint {
+  margin-bottom: 14px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 19px;
+  color: #36353a;
 }
 
 .record-btn {

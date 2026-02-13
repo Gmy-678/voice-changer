@@ -117,6 +117,36 @@ class VoiceChangeStep:
         except Exception:
             pass
 
+        # Demo mode: force passthrough for unsupported voice ids so the pipeline still produces
+        # a usable output (matching duration) without requiring a real provider.
+        force_passthrough = False
+        try:
+            opts = ctx.options or {}
+            demo = opts.get("demo") if isinstance(opts, dict) else None
+            if isinstance(demo, dict) and demo.get("force_passthrough"):
+                force_passthrough = True
+        except Exception:
+            force_passthrough = False
+
+        if force_passthrough:
+            input_missing = not input_path or not os.path.isfile(input_path)
+            if input_missing:
+                self._synthesize_wav(converted_path, duration_sec=fallback_dur)
+            else:
+                shutil.copyfile(input_path, converted_path)
+            ctx.register(converted_path)
+            ctx.debug.setdefault("provider", {})
+            ctx.debug["provider"].update({"name": "passthrough", "status": "demo_force_passthrough"})
+            meta = dict(artifact.meta or {})
+            meta.update(
+                {
+                    "provider": "passthrough",
+                    "provider_status": "demo_force_passthrough",
+                    "note": "Demo mode passthrough: voice not applied.",
+                }
+            )
+            return Artifact(path=converted_path, mime="audio/wav", meta=meta)
+
         # 检查是否是搞怪音色，优先使用本地处理
         if FunnyVoiceProvider.is_funny_voice(ctx.voice_id):
             return self._run_funny_voice(artifact, ctx, input_path, converted_path, fallback_dur)
@@ -152,6 +182,8 @@ class VoiceChangeStep:
             provider = ElevenLabsVoiceChangerHTTP()
             opts = ctx.options or {}
             remove_bg = opts.get("remove_background_noise")
+            if remove_bg is None:
+                remove_bg = opts.get("remove_noise")
 
             result = provider.convert(
                 voice_id=ctx.voice_id,

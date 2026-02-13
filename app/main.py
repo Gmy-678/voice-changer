@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router as api_router
+from app.api.voice_library.routes import router as voice_library_router
 from app.config.settings import OUTPUTS_DIR
 import os
 
@@ -23,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+app.include_router(voice_library_router)
 
 # Mount static outputs directory at /outputs
 app.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")

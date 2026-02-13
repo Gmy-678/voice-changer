@@ -1,0 +1,10 @@
+/* Loaded by index.html; kept minimal on purpose. */
+
+:root {
+  color-scheme: light;
+}
+
+/* Improve tap targets on mobile */
+button {
+  -webkit-tap-highlight-color: transparent;
+}

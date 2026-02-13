@@ -1,0 +1,7 @@
+{
+  "name": "Voice Changer Pro",
+  "description": "A professional, minimalist AI voice changing tool designed for productivity.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

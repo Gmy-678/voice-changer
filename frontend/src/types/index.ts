@@ -2,9 +2,11 @@ export interface Voice {
   id: string
   name: string
   description: string
-  gender: 'male' | 'female'
-  avatar: string
-  isFeatured: boolean
+  gender?: 'male' | 'female' | 'unknown'
+  avatar?: string
+  isFeatured?: boolean
+  isFavorited?: boolean
+  voiceType?: 'built-in' | 'user' | string
 }
 
 export interface AudioFile {

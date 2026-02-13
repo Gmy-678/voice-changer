@@ -37,11 +37,29 @@ def download(url: str, out_filename: str) -> bool:
         return False
 
 
-def main():
-    # Wait a moment for server to be ready
-    time.sleep(1)
+def wait_for_ready(timeout_sec: float = 30.0, interval_sec: float = 0.25) -> bool:
+    deadline = time.monotonic() + timeout_sec
+    last = None
+    while time.monotonic() < deadline:
+        status, body = get(BASE + "/healthz")
+        if status == 200:
+            return True
+        last = (status, body)
+        time.sleep(interval_sec)
 
-    # 1) Health
+    if last:
+        status, body = last
+        print("health_timeout_status:", status)
+        print("health_timeout_body:", body)
+    return False
+
+
+def main():
+    # 1) Health (robust wait)
+    ok = wait_for_ready(timeout_sec=30.0, interval_sec=0.25)
+    if not ok:
+        sys.exit(1)
+
     status, body = get(BASE + "/healthz")
     print("health_status:", status)
     print("health_body:", body)

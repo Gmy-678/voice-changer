@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, Literal
+from typing import Optional, Dict, Any, Literal, List
 from pydantic import BaseModel, Field, HttpUrl
 
 
@@ -97,3 +97,46 @@ class VoiceChangerResponse(BaseModel):
         default_factory=dict,
         description="Extra metadata for debugging or extension"
     )
+
+
+# -------------------------
+# Discovery / Capabilities
+# -------------------------
+
+
+class VoiceInfo(BaseModel):
+    """A minimal voice description for UI discovery."""
+
+    id: str = Field(..., description="Voice ID to use as voice_id")
+    name: str = Field(..., description="Display name")
+    role: str = Field(default="", description="Short role tag")
+    description: str = Field(default="", description="Longer description")
+    category: str = Field(default="public", description="public/private")
+    is_verified: bool = Field(default=True, description="Verified flag (UI hint)")
+    provider: Optional[str] = Field(default=None, description="Underlying provider name")
+
+
+class VoicesResponse(BaseModel):
+    voices: List[VoiceInfo] = Field(default_factory=list)
+
+
+class CapabilitiesResponse(BaseModel):
+    """Backend self-description so frontends can adapt dynamically."""
+
+    voices: List[VoiceInfo] = Field(default_factory=list)
+    output_formats: List[Literal["mp3", "wav"]] = Field(default_factory=lambda: ["mp3", "wav"])
+
+    # Upload constraints / limits (mirrors server-side enforcement)
+    upload_max_bytes: int = Field(..., description="Max allowed upload size in bytes")
+    allowed_content_types: List[str] = Field(default_factory=list)
+    upload_min_duration_sec: float = Field(..., description="Min duration (strictly greater than)")
+    upload_max_duration_sec: float = Field(..., description="Max duration (strictly less than)")
+
+    # Execution model
+    async_mode: bool = Field(default=False, description="Whether jobs are async")
+
+
+class TaskInfoResponse(BaseModel):
+    task_id: str
+    status: str = Field(..., description="success|not_found")
+    output_url: Optional[str] = None

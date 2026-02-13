@@ -1,6 +1,6 @@
 """
 本地搞怪音色处理服务
-使用 pydub 和 numpy 实现5种搞怪音效:
+使用 ffmpeg 音频滤镜实现 5 种搞怪音效:
 - chipmunk: 花栗鼠 (高音加速)
 - robot: 机器人 (音频环调制)
 - ghost: 幽灵 (低沉回声)
@@ -11,9 +11,9 @@
 from __future__ import annotations
 import os
 import tempfile
-import numpy as np
-from typing import Optional
 from dataclasses import dataclass
+
+from app.services.ffmpeg import FFmpegError, is_available as ffmpeg_available, transcode_audio
 
 
 @dataclass
@@ -56,49 +56,45 @@ class FunnyVoiceProvider:
             
         if voice_id not in self.SUPPORTED_VOICES:
             raise ValueError(f"Unsupported funny voice: {voice_id}")
-        
-        # 导入音频处理库
-        try:
-            from pydub import AudioSegment
-        except ImportError:
-            raise RuntimeError("pydub is required for funny voice effects. Install with: pip install pydub")
-        
-        # 加载音频
-        audio = AudioSegment.from_file(audio_path)
-        
+
+        if not ffmpeg_available():
+            raise RuntimeError("ffmpeg is required for funny voice effects. Please install ffmpeg.")
+
+        # 统一采样率，便于 pitch shift 表达式稳定
+        sample_rate = 48000
+
         # 根据音色 ID 应用不同效果 - 美国热搜榜音色
-        if voice_id == 'anime_uncle':
-            processed = self._apply_anime_uncle(audio)
-        elif voice_id == 'uwu_anime':
-            processed = self._apply_uwu_anime(audio)
-        elif voice_id == 'gender_swap':
-            processed = self._apply_gender_swap(audio)
-        elif voice_id == 'mamba':
-            processed = self._apply_mamba(audio)
-        elif voice_id == 'nerd_bro':
-            processed = self._apply_nerd_bro(audio)
-        else:
-            processed = audio
-        
-        # 导出为字节
+        afilters = self._get_ffmpeg_filters(voice_id=voice_id, sample_rate=sample_rate)
+
         with tempfile.NamedTemporaryFile(suffix=f".{output_format}", delete=False) as tmp:
             tmp_path = tmp.name
-        
+
         try:
-            processed.export(tmp_path, format=output_format)
+            transcode_audio(
+                in_path=audio_path,
+                out_path=tmp_path,
+                output_format=output_format,
+                sample_rate=sample_rate,
+                extra_afilters=afilters,
+                timeout_sec=120,
+            )
             with open(tmp_path, "rb") as f:
                 audio_bytes = f.read()
+        except FFmpegError as e:
+            raise RuntimeError(str(e)) from e
         finally:
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
+            try:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+            except Exception:
+                pass
         
         return FunnyVoiceResult(
             audio_bytes=audio_bytes,
             meta={
                 "voice_id": voice_id,
                 "effect": self._get_effect_name(voice_id),
-                "original_duration_ms": len(audio),
-                "processed_duration_ms": len(processed),
+                "filters": afilters,
             }
         )
     
@@ -113,134 +109,48 @@ class FunnyVoiceProvider:
         }
         return names.get(voice_id, voice_id)
     
-    def _apply_anime_uncle(self, audio) -> 'AudioSegment':
-        """
-        动漫大叔效果: 夸张的低沉声音 + 轻微回声
-        模仿日本动漫中夸张的大叔配音风格 "NANI?!"
-        """
-        # 降低音调 0.75 倍，让声音更低沉
-        new_sample_rate = int(audio.frame_rate * 0.75)
-        lowered = audio._spawn(
-            audio.raw_data,
-            overrides={'frame_rate': new_sample_rate}
-        ).set_frame_rate(audio.frame_rate)
-        
-        # 增加一点音量让声音更有力
-        lowered = lowered + 3
-        
-        # 添加轻微回声增加戏剧感
-        delay_ms = 80
-        silence = type(audio).silent(duration=delay_ms)
-        delayed = silence + lowered - 8
-        
-        if len(delayed) > len(lowered):
-            lowered = lowered + type(audio).silent(duration=len(delayed) - len(lowered))
-        else:
-            delayed = delayed + type(audio).silent(duration=len(lowered) - len(delayed))
-        
-        return lowered.overlay(delayed)
-    
-    def _apply_uwu_anime(self, audio) -> 'AudioSegment':
-        """
-        二次元萌音效果: 高音调 + 甜美感
-        Kawaii desu~ UwU 风格
-        """
-        # 提高音调 1.4 倍，让声音更尖细可爱
-        new_sample_rate = int(audio.frame_rate * 1.4)
-        
-        high_pitched = audio._spawn(
-            audio.raw_data,
-            overrides={'frame_rate': new_sample_rate}
-        ).set_frame_rate(audio.frame_rate)
-        
-        # 轻微增加音量
-        result = high_pitched + 2
-        
-        return result
-    
-    def _apply_gender_swap(self, audio) -> 'AudioSegment':
-        """
-        跨性别变声效果: 男声转女声
-        提高音调让声音更女性化
-        """
-        # 提高音调 1.25 倍，适度提高不会太假
-        new_sample_rate = int(audio.frame_rate * 1.25)
-        
-        feminized = audio._spawn(
-            audio.raw_data,
-            overrides={'frame_rate': new_sample_rate}
-        ).set_frame_rate(audio.frame_rate)
-        
-        # 轻微柔化处理
-        samples = np.array(feminized.get_array_of_samples())
-        
-        # 简单的平滑处理让声音更柔和
-        kernel_size = 3
-        kernel = np.ones(kernel_size) / kernel_size
-        smoothed = np.convolve(samples, kernel, mode='same').astype(np.int16)
-        
-        result = feminized._spawn(
-            smoothed.tobytes(),
-            overrides={'frame_rate': feminized.frame_rate}
-        )
-        
-        return result
-    
-    def _apply_mamba(self, audio) -> 'AudioSegment':
-        """
-        科比曼巴效果: 沉稳有力的声音
-        模仿科比那种自信、有力的说话风格
-        """
-        # 略微降低音调 0.9 倍，让声音更沉稳
-        new_sample_rate = int(audio.frame_rate * 0.9)
-        
-        deep_voice = audio._spawn(
-            audio.raw_data,
-            overrides={'frame_rate': new_sample_rate}
-        ).set_frame_rate(audio.frame_rate)
-        
-        # 增加音量让声音更有力量感
-        result = deep_voice + 4
-        
-        # 添加轻微压缩效果（通过限幅模拟）
-        samples = np.array(result.get_array_of_samples())
-        max_val = np.max(np.abs(samples)) * 0.85
-        compressed = np.clip(samples, -max_val, max_val).astype(np.int16)
-        
-        result = result._spawn(
-            compressed.tobytes(),
-            overrides={'frame_rate': result.frame_rate}
-        )
-        
-        return result
-    
-    def _apply_nerd_bro(self, audio) -> 'AudioSegment':
-        """
-        书呆子老哥效果: 略带鼻音的书呆子风格
-        "Actually..." *pushes glasses* 那种感觉
-        """
-        # 轻微提高音调 1.1 倍
-        new_sample_rate = int(audio.frame_rate * 1.1)
-        
-        nasally = audio._spawn(
-            audio.raw_data,
-            overrides={'frame_rate': new_sample_rate}
-        ).set_frame_rate(audio.frame_rate)
-        
-        # 添加轻微的「鼻音」效果 - 通过低频调制模拟
-        samples = np.array(nasally.get_array_of_samples())
-        sample_rate = nasally.frame_rate
-        
-        # 创建轻微的调制
-        t = np.arange(len(samples)) / sample_rate
-        mod_freq = 120  # 鼻腔共振频率
-        modulator = 0.85 + 0.15 * np.sin(2 * np.pi * mod_freq * t)
-        
-        modulated = (samples * modulator).astype(np.int16)
-        
-        result = nasally._spawn(
-            modulated.tobytes(),
-            overrides={'frame_rate': sample_rate}
-        )
-        
-        return result
+    def _pitch_shift_filters(self, *, sample_rate: int, factor: float) -> list[str]:
+        # 说明：asetrate 会同时改变 pitch+速度；再用 atempo 纠正速度，从而近似“只变调”。
+        # atempo 支持 0.5~2.0，本项目 factor 都落在可用范围。
+        return [
+            f"asetrate={sample_rate}*{factor}",
+            f"aresample={sample_rate}",
+            f"atempo={1.0/factor:.6f}",
+        ]
+
+    def _get_ffmpeg_filters(self, *, voice_id: str, sample_rate: int) -> list[str]:
+        if voice_id == "anime_uncle":
+            # 低沉 + 轻微回声
+            return [
+                *self._pitch_shift_filters(sample_rate=sample_rate, factor=0.75),
+                "volume=1.4",
+                "aecho=0.8:0.88:80:0.25",
+            ]
+
+        if voice_id == "uwu_anime":
+            return [
+                *self._pitch_shift_filters(sample_rate=sample_rate, factor=1.4),
+                "volume=1.2",
+            ]
+
+        if voice_id == "gender_swap":
+            return [
+                *self._pitch_shift_filters(sample_rate=sample_rate, factor=1.25),
+                "highpass=f=120",
+                "lowpass=f=12000",
+            ]
+
+        if voice_id == "mamba":
+            return [
+                *self._pitch_shift_filters(sample_rate=sample_rate, factor=0.9),
+                "volume=1.5",
+                "acompressor=threshold=-18dB:ratio=3:attack=20:release=200",
+            ]
+
+        if voice_id == "nerd_bro":
+            return [
+                *self._pitch_shift_filters(sample_rate=sample_rate, factor=1.1),
+                "tremolo=f=120:d=0.15",
+            ]
+
+        return []

@@ -6,7 +6,7 @@
 
   color-scheme: light;
   color: #1a1a2e;
-  background-color: #ffffff;
+  background-color: #f2f4f7;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -22,6 +22,7 @@
 
 body {
   min-height: 100vh;
+  background: #f2f4f7;
 }
 
 /* Ant Design overrides for light theme */

@@ -1,7 +1,7 @@
 <template>
   <div 
     class="upload-card"
-    :class="{ dragging: isDragging }"
+    :class="[variant, { dragging: isDragging }]"
     @dragover.prevent="isDragging = true"
     @dragleave="isDragging = false"
     @drop.prevent="handleDrop"
@@ -9,8 +9,9 @@
     <div class="upload-icon">
       <CloudUploadOutlined />
     </div>
-    <h3 class="upload-title">Upload File</h3>
-    <p class="upload-desc">MP3, WAV, M4A up to 50MB</p>
+    <h3 class="upload-title" v-if="variant !== 'panel'">Upload File</h3>
+    <p class="upload-desc" v-if="variant !== 'panel'">MP3, WAV, M4A up to 50MB</p>
+    <p class="upload-desc panel-hint" v-else>Click to upload or drag and drop</p>
     <input 
       ref="fileInput"
       type="file" 
@@ -29,6 +30,15 @@ import { ref } from 'vue'
 import { CloudUploadOutlined, UploadOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useVoiceStore } from '@/stores/voice'
+
+withDefaults(
+  defineProps<{
+    variant?: 'card' | 'panel'
+  }>(),
+  {
+    variant: 'card'
+  }
+)
 
 const voiceStore = useVoiceStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -144,6 +154,28 @@ const handleDrop = (event: DragEvent) => {
   background: rgba(254, 101, 93, 0.04);
 }
 
+.upload-card.panel {
+  width: 100%;
+  flex: 1;
+  padding: 20px;
+  border-radius: 24px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #ebebeb;
+  background: #ffffff;
+  box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-card.panel:hover,
+.upload-card.panel.dragging {
+  border-color: rgba(54, 53, 58, 0.16);
+  background: #ffffff;
+}
+
 .upload-icon {
   width: 64px;
   height: 64px;
@@ -157,6 +189,16 @@ const handleDrop = (event: DragEvent) => {
   color: #fe655d;
 }
 
+.upload-card.panel .upload-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  margin-bottom: 16px;
+  background: #ffffff;
+  border: 1px solid #e1e1e1;
+  color: #36353a;
+}
+
 .upload-title {
   font-size: 18px;
   font-weight: 600;
@@ -168,6 +210,14 @@ const handleDrop = (event: DragEvent) => {
   font-size: 14px;
   color: #9d9db5;
   margin-bottom: 20px;
+}
+
+.panel-hint {
+  margin-bottom: 14px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 19px;
+  color: #36353a;
 }
 
 .upload-btn {

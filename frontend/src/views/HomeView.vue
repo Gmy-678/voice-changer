@@ -1,31 +1,38 @@
 <template>
   <div class="home-view">
-    <!-- 顶部标题栏 -->
+    <!-- Top bar -->
     <header class="header">
       <div class="header-left">
-        <h1 class="title">CoralVoice Studio</h1>
-        <a-select v-model:value="selectedDevice" class="device-select" size="small">
-          <a-select-option value="default">Device</a-select-option>
-        </a-select>
+        <h1 class="title">Voice Changer</h1>
+        <span class="slots-pill">
+          <span class="slots-text">5/5 Slots remaining</span>
+          <span class="slots-upgrade">Upgrade</span>
+        </span>
       </div>
       <div class="header-right">
-        <a-button type="text" class="start-over-btn" @click="handleStartOver" v-if="voiceStore.originalAudio">
+        <a-button
+          type="text"
+          class="start-over-btn"
+          @click="handleStartOver"
+          v-if="voiceStore.originalAudio"
+        >
           <RedoOutlined /> Start Over
         </a-button>
       </div>
     </header>
     
-    <!-- 主要内容区 -->
+    <!-- Main layout -->
     <div class="content-wrapper">
       <div class="main-area">
-        <!-- 初始状态：上传/录制 -->
+        <!-- Empty state: upload / record -->
         <template v-if="!voiceStore.originalAudio">
-          <div class="upload-section">
-            <AudioUpload />
-            <AudioRecord />
-          </div>
-          <div class="tip-text">
-            <BulbOutlined /> Tip: Select a voice from the right panel to customize your result.
+          <div class="panel">
+            <div class="panel-title">Upload Your Audio</div>
+            <div class="audio-source-card">
+              <AudioUpload variant="panel" />
+              <div class="or-divider"><span>or</span></div>
+              <AudioRecord variant="panel" />
+            </div>
           </div>
         </template>
         
@@ -77,8 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { RedoOutlined, BulbOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
+import { RedoOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { useVoiceStore } from '@/stores/voice'
 import { API_BASE_URL, convertVoice, getOutputUrl } from '@/api'
@@ -91,7 +97,6 @@ import PrecisionControl from '@/components/PrecisionControl.vue'
 import AudioPlayer from '@/components/AudioPlayer.vue'
 
 const voiceStore = useVoiceStore()
-const selectedDevice = ref('default')
 
 const handleStartOver = () => {
   voiceStore.reset()
@@ -169,41 +174,68 @@ const handleGenerate = async () => {
 .home-view {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 48px);
+  height: 100%;
+  overflow: hidden;
 }
 
-/* 顶部标题栏 */
+/* Top bar */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  padding: 18px 24px 14px;
+  margin-bottom: 0px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
 .title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
-  background: linear-gradient(135deg, #fe655d 0%, #ff8a84 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  line-height: 24px;
+  text-transform: capitalize;
+  color: #0d062d;
+  letter-spacing: 0;
 }
 
-.device-select {
-  background: #ffffff;
+.slots-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  width: 204px;
+  height: 36px;
+  border: 1px solid #e1e1e1;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.slots-text {
+  flex: 1;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 15px;
+  text-transform: capitalize;
+  color: #36353a;
+}
+
+.slots-upgrade {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 10px;
+  height: 24px;
+  background: #fed7d5;
   border-radius: 8px;
-}
-
-.device-select :deep(.ant-select-selector) {
-  background: #ffffff !important;
-  border: 1px solid #e8e8ed !important;
-  color: #6b6b80;
+  margin-right: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 12px;
+  color: #fe655d;
 }
 
 .start-over-btn {
@@ -214,38 +246,78 @@ const handleGenerate = async () => {
   color: #fe655d;
 }
 
-/* 内容包装器 */
+/* Layout - Figma: left 418px, right fills remaining (~582px at 1440) */
 .content-wrapper {
-  display: flex;
-  flex: 1;
+  display: grid;
+  grid-template-columns: 418px 1fr;
   gap: 24px;
+  flex: 1;
   overflow: hidden;
+  min-height: 0;
+  padding: 0 24px 16px;
 }
 
 .main-area {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 120%;
+  color: #36353a;
+  margin: 4px 0 14px;
+  flex-shrink: 0;
+}
+
+.audio-source-card {
+  width: 100%;
+  flex: 1;
+  background: #fafafa;
+  border: 1px solid #e1e1e1;
+  border-radius: 24px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
 }
 
-/* 上传区域 */
-.upload-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
+.or-divider {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 12px;
 }
 
-.tip-text {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #6b6b80;
-  font-size: 14px;
-  padding: 12px 16px;
-  background: #ffd1ce;
-  border-radius: 8px;
-  border: 1px solid rgba(254, 101, 93, 0.2);
+.or-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: transparent;
+}
+
+.or-divider span {
+  position: relative;
+  z-index: 1;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 140%;
+  color: #b3b3b3;
+  background: transparent;
+  padding: 0;
+  text-transform: none;
+  letter-spacing: -0.01em;
 }
 
 /* 音频区域 */
@@ -303,7 +375,9 @@ const handleGenerate = async () => {
 
 /* 右侧面板 */
 .voice-panel {
-  width: 320px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding-top: 4px;
 }
 </style>

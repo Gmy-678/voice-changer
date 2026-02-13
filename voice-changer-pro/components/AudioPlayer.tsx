@@ -1,5 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Pause, RefreshCw, ThumbsUp, ThumbsDown, Download } from 'lucide-react';
+/** @format */
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Play,
+  Pause,
+  RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
+  Download,
+} from "lucide-react";
 
 interface AudioPlayerProps {
   src: string | null;
@@ -7,16 +16,23 @@ interface AudioPlayerProps {
   onRegenerate?: () => void;
   isResult?: boolean;
   onReplace?: () => void;
-  mediaType?: 'audio' | 'video';
+  mediaType?: "audio" | "video";
 }
 
 function inferIsVideo(src: string, label?: string): boolean {
-  const s = String(src || '').toLowerCase();
-  const l = String(label || '').toLowerCase();
-  return s.includes('.mp4') || l.endsWith('.mp4');
+  const s = String(src || "").toLowerCase();
+  const l = String(label || "").toLowerCase();
+  return s.includes(".mp4") || l.endsWith(".mp4");
 }
 
-export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, label, onRegenerate, isResult = false, onReplace, mediaType }) => {
+export const AudioPlayer: React.FC<AudioPlayerProps> = ({
+  src,
+  label,
+  onRegenerate,
+  isResult = false,
+  onReplace,
+  mediaType,
+}) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [durationSec, setDurationSec] = useState<number>(0);
@@ -26,8 +42,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, label, onRegenera
 
   const isVideo = useMemo(() => {
     if (!src) return false;
-    if (mediaType === 'video') return true;
-    if (mediaType === 'audio') return false;
+    if (mediaType === "video") return true;
+    if (mediaType === "audio") return false;
     return inferIsVideo(src, label);
   }, [src, label, mediaType]);
 
@@ -48,7 +64,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, label, onRegenera
     const s = Math.max(0, Math.floor(sec));
     const m = Math.floor(s / 60);
     const r = s % 60;
-    return `${m.toString().padStart(2, '0')}:${r.toString().padStart(2, '0')}`;
+    return `${m.toString().padStart(2, "0")}:${r.toString().padStart(2, "0")}`;
   };
 
   const handleLike = () => {
@@ -71,9 +87,14 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, label, onRegenera
   if (isVideo) {
     return (
       <div className="flex flex-col w-full">
-        <div className={`${isResult ? 'py-4 px-4' : 'p-4 bg-white rounded-2xl border border-gray-100 shadow-sm'}`}>
+        <div
+          className={`${isResult ? "py-4 px-4" : "p-4 bg-white rounded-2xl border border-gray-100 shadow-sm"}`}
+        >
           {label && !isResult && (
-            <div className="mb-3 text-sm font-medium text-gray-700 truncate" title={label}>
+            <div
+              className="mb-3 text-sm font-medium text-gray-700 truncate"
+              title={label}
+            >
               {label}
             </div>
           )}
@@ -121,13 +142,13 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, label, onRegenera
                 <div className="flex gap-1">
                   <button
                     onClick={handleLike}
-                    className={`p-2 rounded-lg transition-colors ${liked === true ? 'text-brand-orange bg-brand-orangeLight/20' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
+                    className={`p-2 rounded-lg transition-colors ${liked === true ? "text-brand-orange bg-brand-orangeLight/20" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}
                   >
                     <ThumbsUp size={20} />
                   </button>
                   <button
                     onClick={handleDislike}
-                    className={`p-2 rounded-lg transition-colors ${liked === false ? 'text-brand-orange bg-brand-orangeLight/20' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
+                    className={`p-2 rounded-lg transition-colors ${liked === false ? "text-brand-orange bg-brand-orangeLight/20" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}
                   >
                     <ThumbsDown size={20} />
                   </button>
@@ -139,7 +160,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, label, onRegenera
 
         {showRegeneratePrompt && isResult && (
           <div className="mt-3 bg-brand-orangeLight/30 rounded-xl p-3 flex items-center justify-between animate-fade-in-up border border-brand-orange/10 mx-1">
-            <span className="text-xs font-semibold text-brand-orange uppercase tracking-wide ml-2">Not satisfied?</span>
+            <span className="text-xs font-semibold text-brand-orange uppercase tracking-wide ml-2">
+              Not satisfied?
+            </span>
             <button
               onClick={onRegenerate}
               className="flex items-center gap-1.5 text-xs font-bold text-white bg-brand-orange hover:bg-orange-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
@@ -197,65 +220,71 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, label, onRegenera
           setCurrentSec(Number.isFinite(a.currentTime) ? a.currentTime : 0);
         }}
       />
-      <div className={`w-full flex items-center gap-6 ${isResult ? 'py-4 px-4' : 'p-4 bg-white rounded-2xl border border-gray-100 shadow-sm'}`}>
-        
+      <div
+        className={`w-full flex items-center gap-6 ${isResult ? "py-4 px-4" : "p-4 bg-white rounded-2xl border border-[#e1e1e1] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.05)]"}`}
+      >
         {/* 1. Playback Controls Cluster (Left) */}
         <div className="flex items-center gap-5 flex-shrink-0">
-            <button 
+          <button
             onClick={togglePlay}
-                className="flex items-center justify-center rounded-full bg-brand-black text-white hover:bg-gray-800 transition-transform active:scale-95 shadow-md w-12 h-12"
-            >
-                {isPlaying ? 
-                    <Pause size={20} fill="currentColor" className="stroke-none" /> : 
-                    <Play size={20} fill="currentColor" className="stroke-none ml-1" />
-                }
-            </button>
+            className="flex items-center justify-center rounded-full bg-[#36353a] text-white hover:opacity-90 transition-transform active:scale-95 shadow-md w-12 h-12"
+          >
+            {isPlaying ? (
+              <Pause size={20} fill="currentColor" className="stroke-none" />
+            ) : (
+              <Play
+                size={20}
+                fill="currentColor"
+                className="stroke-none ml-1"
+              />
+            )}
+          </button>
         </div>
 
         {/* 2. Progress Section (Center) */}
         <div className="flex items-center gap-3 flex-1">
-             {/* Current Time */}
-            <span className="font-medium text-gray-900 tabular-nums text-sm w-10 text-right">
-              {fmt(currentSec)}
-            </span>
+          {/* Current Time */}
+          <span className="font-medium text-gray-900 tabular-nums text-sm w-10 text-right">
+            {fmt(currentSec)}
+          </span>
 
-            {/* Progress Bar */}
-            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden relative group cursor-pointer">
-                <div 
-                    className="absolute inset-0 w-full h-full bg-transparent z-10"
-                    onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const percentage = (x / rect.width) * 100;
-                  seekToPct(percentage);
-                    }}
-                />
-                <div 
-                    className="h-full bg-brand-orange rounded-full transition-all duration-75 ease-linear" 
-                style={{ width: `${progressPct}%` }}
-                />
-            </div>
+          {/* Progress Bar */}
+          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden relative group cursor-pointer">
+            <div
+              className="absolute inset-0 w-full h-full bg-transparent z-10"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const percentage = (x / rect.width) * 100;
+                seekToPct(percentage);
+              }}
+            />
+            <div
+              className="h-full bg-[#fe655d] rounded-full transition-all duration-75 ease-linear"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
 
-             {/* Total Time */}
-            <span className="font-medium text-gray-400 tabular-nums text-sm w-10">
-              {durationSec ? fmt(durationSec) : '--:--'}
-            </span>
+          {/* Total Time */}
+          <span className="font-medium text-gray-400 tabular-nums text-sm w-10">
+            {durationSec ? fmt(durationSec) : "--:--"}
+          </span>
 
-            {/* Replace/Update Button */}
-            {onReplace && (
-                <button 
-                    onClick={onReplace}
-                    className="p-1.5 text-gray-400 hover:text-brand-orange hover:bg-brand-orangeLight/20 rounded-lg transition-colors ml-1"
-                    title="Replace file"
-                >
-                    <RefreshCw size={16} />
-                </button>
-            )}
+          {/* Replace/Update Button */}
+          {onReplace && (
+            <button
+              onClick={onReplace}
+              className="p-1.5 text-gray-400 hover:text-brand-orange hover:bg-brand-orangeLight/20 rounded-lg transition-colors ml-1"
+              title="Replace file"
+            >
+              <RefreshCw size={16} />
+            </button>
+          )}
         </div>
 
         {/* 3. Actions Section (Right) */}
         {isResult && (
-            <div className="flex items-center gap-2 pl-4 border-l border-gray-100 ml-2">
+          <div className="flex items-center gap-2 pl-4 border-l border-gray-100 ml-2">
             <a
               className="p-2 rounded-lg text-gray-400 hover:text-brand-black hover:bg-gray-50 transition-colors"
               title="Download result"
@@ -266,35 +295,37 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, label, onRegenera
             >
               <Download size={20} />
             </a>
-                <div className="flex gap-1">
-                    <button 
-                        onClick={handleLike}
-                        className={`p-2 rounded-lg transition-colors ${liked === true ? 'text-brand-orange bg-brand-orangeLight/20' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        <ThumbsUp size={20} />
-                    </button>
-                    <button 
-                        onClick={handleDislike}
-                        className={`p-2 rounded-lg transition-colors ${liked === false ? 'text-brand-orange bg-brand-orangeLight/20' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        <ThumbsDown size={20} />
-                    </button>
-                </div>
+            <div className="flex gap-1">
+              <button
+                onClick={handleLike}
+                className={`p-2 rounded-lg transition-colors ${liked === true ? "text-brand-orange bg-brand-orangeLight/20" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}
+              >
+                <ThumbsUp size={20} />
+              </button>
+              <button
+                onClick={handleDislike}
+                className={`p-2 rounded-lg transition-colors ${liked === false ? "text-brand-orange bg-brand-orangeLight/20" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}
+              >
+                <ThumbsDown size={20} />
+              </button>
             </div>
+          </div>
         )}
       </div>
 
       {/* Regenerate Prompt Bar */}
       {showRegeneratePrompt && isResult && (
         <div className="mt-3 bg-brand-orangeLight/30 rounded-xl p-3 flex items-center justify-between animate-fade-in-up border border-brand-orange/10 mx-1">
-            <span className="text-xs font-semibold text-brand-orange uppercase tracking-wide ml-2">Not satisfied?</span>
-            <button 
-                onClick={onRegenerate}
-                className="flex items-center gap-1.5 text-xs font-bold text-white bg-brand-orange hover:bg-orange-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
-            >
-                <RefreshCw size={12} />
-                Regenerate
-            </button>
+          <span className="text-xs font-semibold text-brand-orange uppercase tracking-wide ml-2">
+            Not satisfied?
+          </span>
+          <button
+            onClick={onRegenerate}
+            className="flex items-center gap-1.5 text-xs font-bold text-white bg-brand-orange hover:bg-orange-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
+          >
+            <RefreshCw size={12} />
+            Regenerate
+          </button>
         </div>
       )}
     </div>
